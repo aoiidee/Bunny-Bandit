@@ -17,6 +17,8 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private PlayerInput pi;
     [SerializeField] private Rigidbody rb;
+    private Enemies enemy;
+    
     public PauseMenu pm;
     private InputAction move;
     private InputAction jump;
@@ -24,16 +26,19 @@ public class PlayerMovement : MonoBehaviour
     private InputAction pause;
     private InputAction restart;
     private InputAction lasso;
-
+    
     [SerializeField] private GameObject player;
     [SerializeField] private GameObject spot;
     [SerializeField] private float speed = 10f;
     [SerializeField] private float jumpForce = 0.1f;
+    
     private List<HidingSpots> HidingSpots = new List<HidingSpots>();
     private HidingSpots currentlyHighlighted;
+    
     [SerializeField] private Lasso lassoBO;
-    private bool canMove = true;
     public bool hiding = false;
+    public bool byeBye = false;
+    [SerializeField] private Camera cam;
 
     // Gets certain components for input actions and also starts the highlight couroutine 
     void Awake()
@@ -48,6 +53,8 @@ public class PlayerMovement : MonoBehaviour
         // grabs the rigid body component from the player
         rb = GetComponent<Rigidbody>();
 
+        enemy = FindObjectOfType<Enemies>();
+
         // grabs the input actions from the action map in unity
         move = pi.currentActionMap.FindAction("Move");
         jump = pi.currentActionMap.FindAction("Jump");
@@ -57,6 +64,7 @@ public class PlayerMovement : MonoBehaviour
         lasso = pi.currentActionMap.FindAction("Lasso");
 
         // creates the functions for the input actions
+        move.canceled += Move_canceled;
         jump.started += Jump_started;
         pause.started += Pause_started;
         restart.started += Restart_started;
@@ -64,6 +72,11 @@ public class PlayerMovement : MonoBehaviour
         lasso.started += Lasso_started;
 
         StartCoroutine(Highlight());
+    }
+
+    private void Move_canceled(InputAction.CallbackContext obj)
+    {
+        rb.velocity = Vector3.zero;
     }
 
     // when the player hits the LMB it will activate this function
@@ -130,6 +143,7 @@ public class PlayerMovement : MonoBehaviour
     // disables all of the input functions
     private void OnDisable()
     {
+        move.canceled -= Move_canceled;
         jump.started -= Jump_started;
         pause.started -= Pause_started;
         restart.started -= Restart_started;
@@ -138,21 +152,30 @@ public class PlayerMovement : MonoBehaviour
     }
 
     // the script for player movement
-    void Update()
+    void FixedUpdate()
     {
-        // checks if the player is allowed to move
-        if (canMove)
-        {
-            // reads the value of Vector2 of the player and sets that as moveDirection
-            Vector2 moveDirection = move.ReadValue<Vector2>();
-            
-            // the player's velocity will be the moveDirection at the certain speed in both X and Y from the Vector2 
-            rb.velocity = new Vector3(moveDirection.y * speed * -1, rb.velocity.y, moveDirection.x * speed);
-        }
+        // reads the value of Vector2 of the player and sets that as moveDirection
+        Vector2 direction = move.ReadValue<Vector2>();
+
+        Vector3 camHorizontal = cam.transform.right;
+        Vector3 camDirection = cam.transform.forward;
+
+        // making the y zero is what stops the player from flying up when the camera is facing up
+        camDirection.y = 0f;
+        camHorizontal.y = 0f;
+
+        // moves the player in the direction towards the camrea + left and right in that direction as well
+        Vector3 velocity = (camDirection * speed * direction.y) + (camHorizontal * speed * direction.x);
+        velocity.y = rb.velocity.y;
+
+        // sets the RigidBody velocity to the Vector3 velocity I made
+        rb.velocity = velocity;
+
+        // moves the player to look in the direction of where the camera is facing
+        transform.LookAt(transform.position + camDirection);
     }
 
-    // when the player gets close to a hiding spot it adds that hiding spot to a list
-    private void OnTriggerEnter(Collider other)
+    public void EnterHiding(Collider other)
     {
         // if the hiding spot isn't null
         if (other.gameObject.GetComponent<HidingSpots>() != null)
@@ -160,16 +183,25 @@ public class PlayerMovement : MonoBehaviour
             // adds the hiding spot to the HidingSpots list
             HidingSpots.Add(other.gameObject.GetComponent<HidingSpots>());
         }
+
+        if (other.transform.tag == "hidespot")
+        {
+            hiding = true;
+        }
     }
 
-    // when the player moves away from a hiding spot it will remove that from the list
-    private void OnTriggerExit(Collider other)
+    public void ExitHiding(Collider other)
     {
         // if the hiding spot isn't null
         if (other.gameObject.GetComponent<HidingSpots>() != null)
         {
             // removes the hiding spot to the HidingSpots list
             HidingSpots.Remove(other.gameObject.GetComponent<HidingSpots>());
+        }
+
+        if (other.transform.tag == "hidespot")
+        {
+            hiding = false;
         }
     }
 
@@ -235,13 +267,13 @@ public class PlayerMovement : MonoBehaviour
     IEnumerator LassoTime()
     {
         // sets canMove to false so the player cannot move
-        canMove = false;
+        //canMove = false;
         
         // makes everything wait for 1 second
         yield return new WaitForSeconds(1);
         
         // after those seconds the player can move again
-        canMove = true;
+        //canMove = true;
 
         // calls the function from the lasso script to return the lasso after those seconds
         lassoBO.ReturnLasso();

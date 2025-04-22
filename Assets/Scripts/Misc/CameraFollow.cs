@@ -20,7 +20,7 @@ public class CameraFollow : MonoBehaviour
     void Start()
     {
         // sets the vector3 offsets for x, y, and z
-        offset = new Vector3(4, 5, 0);
+        offset = new Vector3(8, 4, 0);
     }
 
     // sets the position of the camera

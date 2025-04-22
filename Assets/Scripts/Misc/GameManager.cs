@@ -15,17 +15,27 @@ next level after all documents are collected and counting the documents.
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private int documents = 0;
+    public int documents = 0;
     public GameObject gameOver;
+    public GameObject gameWon;
 
     // when the object this script is attached to is collided with something
     private void OnCollisionEnter(Collision collision)
     {
-        // if the exit hits a game object that has the tag "player" and if 3 documents have been collected
-        if (collision.transform.tag == "player" && documents == 3)
+        // if the exit hits a game object that has the tag "player" and if 8 documents have been collected
+        if (collision.transform.tag == "player" && documents == 8)
         {
-            // restarts the scene back to the start position
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName("Level3"))
+            {
+                Time.timeScale = 0f;
+                gameWon.SetActive(true);
+            }
+
+            else
+            {
+                // restarts the scene back to the start position
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            }
         }
     }
 
@@ -33,6 +43,16 @@ public class GameManager : MonoBehaviour
     {
         // adds 1 to the amount of documents collected
         documents++;
+
+        if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName("Level3") && documents == 1)
+        {
+            Enemies[] level3 = FindObjectsOfType<Enemies>(); 
+
+            foreach (Enemies enem in level3)
+            {
+                enem.Move = true;
+            }
+        }
     }
 
     public void GameOver()
