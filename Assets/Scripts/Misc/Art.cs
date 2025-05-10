@@ -2,10 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/*****************************************************************************
+// File Name :         Art.cs
+// Author :            Noah M. Lipowski
+// Creation Date :     April 22nd, 2025
+//
+// Brief Description : This script is used for the in-game sprites for them
+to face the camera.
+*****************************************************************************/
+
 public class Art : MonoBehaviour
 {
     [SerializeField] private Camera cam;
 
+    // makes the in-game sprites look at the camera at all times
     private void LateUpdate()
     {
         // gets the camera's position

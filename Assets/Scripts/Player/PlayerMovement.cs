@@ -21,7 +21,6 @@ public class PlayerMovement : MonoBehaviour
     
     public PauseMenu pm;
     private InputAction move;
-    private InputAction jump;
     private InputAction interact;
     private InputAction pause;
     private InputAction restart;
@@ -30,14 +29,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private GameObject player;
     [SerializeField] private GameObject spot;
     [SerializeField] private float speed = 10f;
-    [SerializeField] private float jumpForce = 0.1f;
     
     private List<HidingSpots> HidingSpots = new List<HidingSpots>();
     private HidingSpots currentlyHighlighted;
     
     [SerializeField] private Lasso lassoBO;
     public bool hiding = false;
-    public bool byeBye = false;
     [SerializeField] private Camera cam;
 
     // Gets certain components for input actions and also starts the highlight couroutine 
@@ -53,11 +50,11 @@ public class PlayerMovement : MonoBehaviour
         // grabs the rigid body component from the player
         rb = GetComponent<Rigidbody>();
 
+        // grabs the enemy script for enemies
         enemy = FindObjectOfType<Enemies>();
 
         // grabs the input actions from the action map in unity
         move = pi.currentActionMap.FindAction("Move");
-        jump = pi.currentActionMap.FindAction("Jump");
         interact = pi.currentActionMap.FindAction("Interact");
         pause = pi.currentActionMap.FindAction("Pause");
         restart = pi.currentActionMap.FindAction("Restart");
@@ -65,17 +62,25 @@ public class PlayerMovement : MonoBehaviour
 
         // creates the functions for the input actions
         move.canceled += Move_canceled;
-        jump.started += Jump_started;
         pause.started += Pause_started;
         restart.started += Restart_started;
         interact.started += Interact_started;
         lasso.started += Lasso_started;
 
+        // start the coroutine later in the script as soon as the game starts
         StartCoroutine(Highlight());
+
+        // makes the cursor lock in the middle of the screen when the game starts
+        Cursor.lockState = CursorLockMode.Locked;
+
+        // makes the cursor invisiable 
+        Cursor.visible = false;
     }
 
+    // when the player stops pressing the input buttons for movement
     private void Move_canceled(InputAction.CallbackContext obj)
     {
+        // sets velocity to zero so the player doesn't move
         rb.velocity = Vector3.zero;
     }
 
@@ -114,37 +119,14 @@ public class PlayerMovement : MonoBehaviour
     {
         // opens up the pause menu which was implemented in the PauseMenu script
         pm.Paused();
-    }
-
-    // when the player presses space it will activate this function
-    private void Jump_started(InputAction.CallbackContext obj)
-    {
-        // checks if the player is on the ground
-        if (IsGrounded())
-        {
-            // pushes the player up making them 'jump'
-            rb.AddForce(new Vector3(0, jumpForce, 0), ForceMode.Impulse);
-        }
-    }
-
-    // checks if the player is on the ground for the player to jump
-    private bool IsGrounded()
-    {
-        // if the player is on the ground
-        if (Physics.Raycast(transform.position, Vector3.down, 1f))
-        {
-            // they can jump
-            return true;
-        }
-        // if not, they can't jump
-        return false;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     // disables all of the input functions
     private void OnDisable()
     {
         move.canceled -= Move_canceled;
-        jump.started -= Jump_started;
         pause.started -= Pause_started;
         restart.started -= Restart_started;
         interact.started -= Interact_started;
@@ -183,11 +165,6 @@ public class PlayerMovement : MonoBehaviour
             // adds the hiding spot to the HidingSpots list
             HidingSpots.Add(other.gameObject.GetComponent<HidingSpots>());
         }
-
-        if (other.transform.tag == "hidespot")
-        {
-            hiding = true;
-        }
     }
 
     public void ExitHiding(Collider other)
@@ -197,8 +174,15 @@ public class PlayerMovement : MonoBehaviour
         {
             // removes the hiding spot to the HidingSpots list
             HidingSpots.Remove(other.gameObject.GetComponent<HidingSpots>());
+
+            // sets the current hiding spot to false so it doesn't show in the game
+            currentlyHighlighted.spot.SetActive(false);
+
+            // sets the entire hiding spot to null so the player can no longer teleport to it
+            currentlyHighlighted = null;
         }
 
+        // checks if the player is on top of a hiding spot
         if (other.transform.tag == "hidespot")
         {
             hiding = false;
