@@ -508,22 +508,22 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Art - Me
+  m_text: 'Art - Noah Lipowski
 
-    Programming - Me + TAs
+    Programming - Noah Lipowski + TAs
 
-    UI - Me
+    UI - Noah
+    Lipowski
 
-    Design - Me
+    Design - Noah Lipowski
 
 
-    Music
-    - MFCC on Pixabay
+    Music - MFCC on Pixabay
 
-    Sounds - Freesound.org
+    Sounds
+    - Freesound.org
 
-    3D Assets - nappin on Unity
-    Asset Store'
+    3D Assets - nappin on Unity Asset Store'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b6ca3200d5ff1db42959633fcd3899d9, type: 2}
   m_sharedMaterial: {fileID: -4131604875749283679, guid: b6ca3200d5ff1db42959633fcd3899d9, type: 2}
@@ -1122,7 +1122,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &961909036
 RectTransform:
   m_ObjectHideFlags: 0
